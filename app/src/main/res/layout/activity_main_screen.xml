@@ -12,29 +12,36 @@
 
     <Button
         android:id="@+id/camera_action"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Camera"/>
+        android:text="Camera"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:id="@+id/message"
-        android:layout_below="@+id/camera_action"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Message"/>
+        android:text="Wish us !!"
+        android:layout_above="@+id/save"
+        android:layout_alignStart="@+id/save" />
 
    <ImageView
        android:id="@+id/image"
-       android:layout_below="@+id/message"
        android:layout_width="match_parent"
        android:layout_height="wrap_content"
-       android:src="@mipmap/ic_launcher"/>
+       android:src="@mipmap/us"
+       android:layout_alignParentStart="true"
+       android:layout_above="@+id/message"
+       android:layout_alignParentEnd="true"
+       android:layout_below="@+id/camera_action" />
 
     <Button
         android:id="@+id/save"
-        android:layout_below="@+id/image"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Save"/>
+        android:text="Save"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>
