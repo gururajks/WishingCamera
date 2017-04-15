@@ -44,8 +44,7 @@ public class MainScreen extends Activity {
     protected void saveEditedPhoto() {
         try {
             File photoStorageDirectory = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            File tempImage = File.createTempFile("temp", ".jpg", pho
-                    toStorageDirectory);
+            File tempImage = File.createTempFile("temp", ".jpg", photoStorageDirectory);
             System.out.println(tempImage.getAbsolutePath());
         }
         catch (IOException e)
