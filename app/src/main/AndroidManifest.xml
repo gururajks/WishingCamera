@@ -19,5 +19,7 @@
 
     <uses-feature android:name="android.hardware.camera2"
                   android:required="true" />
+    <uses-feature android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                  android:required="true" />
 
 </manifest>
