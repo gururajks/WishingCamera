@@ -1,9 +1,11 @@
 package guru.wishingcamera;
 
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -13,8 +15,13 @@ import android.widget.Toast;
  * A simple {@link Fragment} subclass.
  */
 public class MessageTemplateDialog extends DialogFragment {
-//
-    CharSequence[] templates = {"Congrats for the new couple","Have a happy married life "};
+
+    public interface MessageTemplateListener {
+        public void onMessageTemplateClick(DialogInterface dialogFragment, String whichMessage, int which);
+    }
+
+    MessageTemplateListener messageTemplateListener=null;
+
     public MessageTemplateDialog() {
         // Required empty public constructor
     }
@@ -25,8 +32,9 @@ public class MessageTemplateDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setItems(R.array.message_array, new DialogInterface.OnClickListener(){
                         public void onClick(DialogInterface dialog, int which) {
-                            CharSequence msg = "which item:" + which + "   :" + getResources().getStringArray(R.array.message_array)[which];
-                            Toast.makeText(getActivity().getApplicationContext(), msg, Toast.LENGTH_SHORT ).show();
+                            String message = getResources().getStringArray(R.array.message_array)[which];
+                            messageTemplateListener.onMessageTemplateClick(dialog, message, which);
+
                         }
                     });
 
@@ -34,5 +42,19 @@ public class MessageTemplateDialog extends DialogFragment {
         return builder.create();
     }
 
+    // Override the Fragment.onAttach() method to instantiate the NoticeDialogListener
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        // Verify that the host activity implements the callback interface
+        try {
+            // Instantiate the NoticeDialogListener so we can send events to the host
+            messageTemplateListener = (MessageTemplateListener) context;
+        } catch (ClassCastException e) {
+            // The activity doesn't implement the interface, throw exception
+            throw new ClassCastException(context.toString()
+                    + " must implement NoticeDialogListener");
+        }
+    }
 
 }
