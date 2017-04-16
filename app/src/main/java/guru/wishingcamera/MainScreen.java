@@ -1,6 +1,7 @@
 package guru.wishingcamera;
 
 import android.app.Activity;
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -39,12 +40,24 @@ public class MainScreen extends Activity {
             }
         });
 
+        Button message = (Button) findViewById(R.id.message);
+        message.setOnClickListener( new View.OnClickListener() {
+            public void onClick(View v) {
+                showMessageDialog();
+            }
+        });
+
         Button savePhoto = (Button) findViewById(R.id.save);
         savePhoto.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 saveEditedPhoto();
             }
         });
+    }
+
+    private void showMessageDialog() {
+        DialogFragment dialog = new MessageTemplateDialog();
+        dialog.show(getFragmentManager(), "NoticeDialogFragment");
     }
 
     //save the edited photo

@@ -3,4 +3,11 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="message">Message</string>
+    <string-array name="message_array">
+        <item>Congrats to the new couple</item>
+        <item>Have a happy married life</item>
+        <item>Food was great!</item>
+        <item>Type a funny message</item>
+    </string-array>
 </resources>
