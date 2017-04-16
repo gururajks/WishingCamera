@@ -136,10 +136,11 @@ public class MainScreen extends Activity
     @Override
     public void onMessageTemplateClick(DialogInterface dialogFragment, String message, int which) {
         if(which == 3) {
-
+            //draw a new dialog fragment with edit text and take a custom message
         }
         else {
             m_wishingMessage = message;
+            //draw the edited scaled image to image view
             drawEditedCapturedImage();
         }
     }
@@ -153,7 +154,7 @@ public class MainScreen extends Activity
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
             paint.setTextSize(40);
-            canvas.drawText(m_wishingMessage, 20, 20, paint);
+            canvas.drawText(m_wishingMessage, 20, (mutableBitmap.getHeight() - 20), paint);
             m_imageView.setImageBitmap(mutableBitmap);
             m_imageView.invalidate();
         }
