@@ -18,8 +18,10 @@ import android.support.v4.content.FileProvider;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -116,7 +118,6 @@ public class MainScreen extends Activity
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
-        image.deleteOnExit();
         m_tempFilePath = image.getAbsolutePath();
         System.out.println("tempfile path:" + m_tempFilePath);
         return image;
@@ -193,7 +194,13 @@ public class MainScreen extends Activity
     private void saveCapturedPhotos() throws IOException {
         Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
         Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
-
+        File imageFile = new File(m_tempFilePath);
+        FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
+        if(fileOutputStream != null) {
+            fullSizeCapturedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
+            Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT ).show();
+            fileOutputStream.close();
+        }
     }
 
     //set the picture in the imageview
