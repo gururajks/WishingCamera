@@ -20,6 +20,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.appindexing.Thing;
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -27,14 +32,19 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainScreen extends Activity
-                        implements MessageTemplateDialog.MessageTemplateListener,
-                        CustomMessageDialog.CustomMessageDialogListener {
+        implements MessageTemplateDialog.MessageTemplateListener,
+        CustomMessageDialog.CustomMessageDialogListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String m_tempFilePath;
     Bitmap m_scaledCapturedBitmap;
     ImageView m_imageView;
-    String m_wishingMessage="";
+    String m_wishingMessage = "";
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,14 +53,14 @@ public class MainScreen extends Activity
 
         //Camera button
         Button startCamera = (Button) findViewById(R.id.camera_action);
-        startCamera.setOnClickListener(new View.OnClickListener(){
+        startCamera.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 takePictureIntent();
             }
         });
 
         Button message = (Button) findViewById(R.id.message);
-        message.setOnClickListener( new View.OnClickListener() {
+        message.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 showMessageDialog();
             }
@@ -64,6 +74,9 @@ public class MainScreen extends Activity
         });
 
         m_imageView = (ImageView) findViewById(R.id.image);
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void showMessageDialog() {
@@ -75,9 +88,7 @@ public class MainScreen extends Activity
     protected void saveEditedPhoto() {
         try {
             saveCapturedPhotos();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -90,9 +101,7 @@ public class MainScreen extends Activity
             File tempPhotoFile = null;
             try {
                 tempPhotoFile = createTempFile();
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 System.out.println("Error in the SD Cards");
             }
             if (tempPhotoFile != null) {
@@ -146,12 +155,11 @@ public class MainScreen extends Activity
 
     @Override
     public void onMessageTemplateClick(DialogInterface dialogFragment, String message, int which) {
-        if(which == 3) {
+        if (which == 3) {
             //draw a new dialog fragment with edit text and take a custom message
             DialogFragment dialog = new CustomMessageDialog();
             dialog.show(getFragmentManager(), "CustomMessageDialog");
-        }
-        else {
+        } else {
             m_wishingMessage = message;
             //draw the edited scaled image to image view
             Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
@@ -172,7 +180,7 @@ public class MainScreen extends Activity
     }
 
     protected Bitmap getEditedCapturedImage(Bitmap uneditedImage) {
-        if(uneditedImage != null) {
+        if (uneditedImage != null) {
             Bitmap mutableBitmap = uneditedImage.copy(Bitmap.Config.ARGB_8888, true);
 
             //create a canvas and edit the file
@@ -196,9 +204,9 @@ public class MainScreen extends Activity
         Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
         File imageFile = new File(m_tempFilePath);
         FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
-        if(fileOutputStream != null) {
-            fullSizeCapturedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
-            Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT ).show();
+        if (fileOutputStream != null) {
+            fullSizeEditedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
+            Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT).show();
             fileOutputStream.close();
         }
     }
@@ -216,15 +224,51 @@ public class MainScreen extends Activity
         int photoH = bmOptions.outHeight;
 
         // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
+        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
 
         // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
         m_scaledCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath, bmOptions);
-        if(m_scaledCapturedBitmap == null) {
+        if (m_scaledCapturedBitmap == null) {
             BitmapDrawable bmDrawable = (BitmapDrawable) m_imageView.getDrawable();
             m_scaledCapturedBitmap = bmDrawable.getBitmap();
         }
+    }
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("MainScreen Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
     }
 }
