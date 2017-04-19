@@ -10,4 +10,6 @@
         <item>Food was great!</item>
         <item>Type a funny message</item>
     </string-array>
+    <string name="cancel">Cancel</string>
+    <string name="ok">Ok</string>
 </resources>

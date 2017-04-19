@@ -25,7 +25,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainScreen extends Activity
-                        implements MessageTemplateDialog.MessageTemplateListener {
+                        implements MessageTemplateDialog.MessageTemplateListener,
+                        CustomMessageDialog.CustomMessageDialogListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     String m_tempFilePath;
@@ -65,7 +66,7 @@ public class MainScreen extends Activity
 
     private void showMessageDialog() {
         DialogFragment dialog = new MessageTemplateDialog();
-        dialog.show(getFragmentManager(), "NoticeDialogFragment");
+        dialog.show(getFragmentManager(), "MessageTemplateDialog");
     }
 
     //save the edited photo
@@ -98,6 +99,7 @@ public class MainScreen extends Activity
                         tempPhotoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                galleryAddPic();
             }
 
         }
@@ -129,25 +131,48 @@ public class MainScreen extends Activity
 
             //set the image view with the edited file
             m_imageView.setImageBitmap(m_scaledCapturedBitmap);
-
         }
     }
+
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(m_tempFilePath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+    }
+
 
     @Override
     public void onMessageTemplateClick(DialogInterface dialogFragment, String message, int which) {
         if(which == 3) {
             //draw a new dialog fragment with edit text and take a custom message
+            DialogFragment dialog = new CustomMessageDialog();
+            dialog.show(getFragmentManager(), "CustomMessageDialog");
         }
         else {
             m_wishingMessage = message;
             //draw the edited scaled image to image view
-            drawEditedCapturedImage();
+            Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
+            updateImageView(editedScaledBitmap);
         }
     }
 
-    protected void drawEditedCapturedImage() {
-        if(m_scaledCapturedBitmap != null) {
-            Bitmap mutableBitmap = m_scaledCapturedBitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+    @Override
+    /*
+    * send message when the custom message has been sent back to activity upon ok
+     */
+    public void onCustomMessageDialogOk(DialogInterface dialog, String message) {
+        m_wishingMessage = message;
+        //draw the edited scaled image to image view
+        Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
+        updateImageView(editedScaledBitmap);
+    }
+
+    protected Bitmap getEditedCapturedImage(Bitmap uneditedImage) {
+        if(uneditedImage != null) {
+            Bitmap mutableBitmap = uneditedImage.copy(Bitmap.Config.ARGB_8888, true);
 
             //create a canvas and edit the file
             Canvas canvas = new Canvas(mutableBitmap);
@@ -155,14 +180,20 @@ public class MainScreen extends Activity
             paint.setColor(Color.WHITE);
             paint.setTextSize(40);
             canvas.drawText(m_wishingMessage, 20, (mutableBitmap.getHeight() - 20), paint);
-            m_imageView.setImageBitmap(mutableBitmap);
-            m_imageView.invalidate();
+            return mutableBitmap;
         }
+        return null;
     }
 
+    private void updateImageView(Bitmap image) {
+        m_imageView.setImageBitmap(image);
+        m_imageView.invalidate();
+    }
 
     private void saveCapturedPhotos() throws IOException {
-        //Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
+        Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
+        Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
+
     }
 
     //set the picture in the imageview
@@ -189,5 +220,4 @@ public class MainScreen extends Activity
             m_scaledCapturedBitmap = bmDrawable.getBitmap();
         }
     }
-
 }
