@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="guru.wishingcamera">
 
     <application
@@ -20,21 +21,17 @@
             android:authorities="guru.wishingcamera.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
+
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths"></meta-data>
-        </provider><!-- ATTENTION: This was auto-generated to add Google Play services to your project for
-     App Indexing.  See https://g.co/AppIndexing/AndroidStudio for more information. -->
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
+                android:resource="@xml/filepaths" />
 
+        </provider>
 
     </application>
-
     <uses-feature android:name="android.hardware.camera2"
-                  android:required="true" />
-    <uses-feature android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-                  android:required="true" />
+        android:required="true" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 </manifest>

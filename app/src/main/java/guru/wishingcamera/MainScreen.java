@@ -1,9 +1,10 @@
 package guru.wishingcamera;
 
-import android.app.Activity;
+import android.Manifest;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -14,16 +15,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
-
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,20 +31,20 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class MainScreen extends Activity
+public class MainScreen extends AppCompatActivity
         implements MessageTemplateDialog.MessageTemplateListener,
         CustomMessageDialog.CustomMessageDialogListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    static final int REQUEST_WRITE_EXTERNAL_STORAGE = 2;
+
+
     String m_tempFilePath;
     Bitmap m_scaledCapturedBitmap;
     ImageView m_imageView;
     String m_wishingMessage = "";
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
+
+    private String m_tempImageFileName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,9 +74,6 @@ public class MainScreen extends Activity
         });
 
         m_imageView = (ImageView) findViewById(R.id.image);
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void showMessageDialog() {
@@ -89,6 +86,7 @@ public class MainScreen extends Activity
         try {
             saveCapturedPhotos();
         } catch (IOException e) {
+
             e.printStackTrace();
         }
     }
@@ -102,7 +100,7 @@ public class MainScreen extends Activity
             try {
                 tempPhotoFile = createTempFile();
             } catch (IOException e) {
-                System.out.println("Error in the SD Cards");
+                Log.e("SD Card", "Error in the SD Card");
             }
             if (tempPhotoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
@@ -128,7 +126,9 @@ public class MainScreen extends Activity
                 storageDir      /* directory */
         );
         m_tempFilePath = image.getAbsolutePath();
-        System.out.println("tempfile path:" + m_tempFilePath);
+        m_tempImageFileName = image.getName();
+        Log.d("Create", "tempfile path:" + m_tempFilePath);
+        Log.d("Create", "filename:" + m_tempImageFileName);
         return image;
     }
 
@@ -182,13 +182,14 @@ public class MainScreen extends Activity
     protected Bitmap getEditedCapturedImage(Bitmap uneditedImage) {
         if (uneditedImage != null) {
             Bitmap mutableBitmap = uneditedImage.copy(Bitmap.Config.ARGB_8888, true);
-
+            int imageHeight = mutableBitmap.getHeight();
+            int fontSize = (imageHeight / 10);
             //create a canvas and edit the file
             Canvas canvas = new Canvas(mutableBitmap);
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
-            paint.setTextSize(40);
-            canvas.drawText(m_wishingMessage, 20, (mutableBitmap.getHeight() - 20), paint);
+            paint.setTextSize(fontSize);
+            canvas.drawText(m_wishingMessage, 20, (imageHeight - 20), paint);
             return mutableBitmap;
         }
         return null;
@@ -200,16 +201,95 @@ public class MainScreen extends Activity
     }
 
     private void saveCapturedPhotos() throws IOException {
+        boolean canWriteToSdCard = checkStoragePermission();
+        Log.d("Permissino", Boolean.toString(canWriteToSdCard));
+        if(canWriteToSdCard) {
+            writePhoto();
+        }
+        else {
+            //request permission to write to external disk
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_EXTERNAL_STORAGE);
+        }
+    }
+
+    private void writePhoto() throws  IOException {
         Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
         Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
         File imageFile = new File(m_tempFilePath);
-        FileOutputStream fileOutputStream = new FileOutputStream(imageFile);
-        if (fileOutputStream != null) {
-            fullSizeEditedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
-            Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT).show();
-            fileOutputStream.close();
+
+        //Copy file to public folder
+        if(isExternalStorageWritable()) {
+            File albumDir = getAlbumStorageDir("WishPics");
+            File publicImageFile = new File(albumDir, m_tempImageFileName);
+            FileOutputStream fileOutputStream = new FileOutputStream(publicImageFile);
+            if (fileOutputStream != null) {
+                fullSizeEditedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
+                Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT).show();
+                fileOutputStream.close();
+
+                //delete the temp file
+                imageFile.delete();
+            }
+        }
+        else {
+            Toast.makeText(getApplicationContext(), "SD Card not loaded", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private boolean checkStoragePermission() {
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_WRITE_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("Permission", "Permission Granted");
+                    saveEditedPhoto();
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Log.d("Permission", "Permission to write SD Card denied");
+                    Toast.makeText(this, "App requires SD card permission", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+    public File getAlbumStorageDir(String albumName) {
+        // Get the directory for the user's public pictures directory.
+        File file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+        File imagesFolder = new File(file, albumName);
+        if (!imagesFolder.mkdirs()) {
+            Log.d("Create", imagesFolder + ":Directory not created");
+        }
+        return imagesFolder;
+    }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
 
     //set the picture in the imageview
     private void scaleDownCapturedImage() {
@@ -236,39 +316,4 @@ public class MainScreen extends Activity
         }
     }
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("MainScreen Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-        client.disconnect();
-    }
 }
