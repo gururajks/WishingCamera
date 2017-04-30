@@ -21,8 +21,8 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.File;
@@ -52,21 +52,21 @@ public class MainScreen extends AppCompatActivity
         setContentView(R.layout.activity_main_screen);
 
         //Camera button
-        Button startCamera = (Button) findViewById(R.id.camera_action);
+        RelativeLayout startCamera = (RelativeLayout) findViewById(R.id.camera_action);
         startCamera.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 takePictureIntent();
             }
         });
 
-        Button message = (Button) findViewById(R.id.message);
+        RelativeLayout message = (RelativeLayout) findViewById(R.id.message);
         message.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 showMessageDialog();
             }
         });
 
-        Button savePhoto = (Button) findViewById(R.id.save);
+        RelativeLayout savePhoto = (RelativeLayout) findViewById(R.id.save);
         savePhoto.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 saveEditedPhoto();
@@ -265,9 +265,6 @@ public class MainScreen extends AppCompatActivity
                 }
                 break;
             }
-
-            // other 'case' lines to check for other
-            // permissions this app might request
         }
     }
 
