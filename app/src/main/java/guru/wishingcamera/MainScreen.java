@@ -20,6 +20,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -74,6 +77,7 @@ public class MainScreen extends AppCompatActivity
         });
 
         m_imageView = (ImageView) findViewById(R.id.image);
+
     }
 
     private void showMessageDialog() {
@@ -183,6 +187,8 @@ public class MainScreen extends AppCompatActivity
         if (uneditedImage != null) {
             Bitmap mutableBitmap = uneditedImage.copy(Bitmap.Config.ARGB_8888, true);
             int imageHeight = mutableBitmap.getHeight();
+            int imageWidth = mutableBitmap.getWidth();
+            Log.d("image", "imageHeight:" + imageHeight);
             int fontSize = (imageHeight / 10);
             //create a canvas and edit the file
             Canvas canvas = new Canvas(mutableBitmap);
@@ -194,6 +200,28 @@ public class MainScreen extends AppCompatActivity
         }
         return null;
     }
+
+    //Todo work for multiple row of strings
+    /*
+    protected String[] getStrings(int imageWidth) {
+        //String[] messageParts = m_wishingMessage.split(" ");
+        int stringSize = m_wishingMessage.length();
+        int overflow = imageWidth / stringSize;
+        String[] messageParts = new String[overflow + 1];
+        int beginIndex = 0;
+        int partSize = (stringSize / (overflow + 1));
+        for(int i = 0 ; i < overflow; i++) {
+            if(i == overflow - 1) {
+                messageParts[i] = m_wishingMessage.substring(beginIndex, m_wishingMessage.length() - 1);
+            }
+            messageParts[i] = m_wishingMessage.substring(beginIndex, partSize + beginIndex);
+            beginIndex = partSize + beginIndex + 1;
+            Log.d("message", messageParts[i]);
+        }
+
+        return messageParts;
+    }*/
+
 
     private void updateImageView(Bitmap image) {
         m_imageView.setImageBitmap(image);
@@ -293,10 +321,12 @@ public class MainScreen extends AppCompatActivity
         // Get the dimensions of the View
         int targetW = m_imageView.getWidth();
         int targetH = m_imageView.getHeight();
-
+        Log.d("image", "targetH:"+targetH);
+        Log.d("image", "targetW:"+targetW);
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(m_tempFilePath, bmOptions);
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
 
@@ -310,6 +340,32 @@ public class MainScreen extends AppCompatActivity
         if (m_scaledCapturedBitmap == null) {
             BitmapDrawable bmDrawable = (BitmapDrawable) m_imageView.getDrawable();
             m_scaledCapturedBitmap = bmDrawable.getBitmap();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                // User chose the "Settings" item, show the app settings UI...
+                return true;
+
+            case R.id.clear_image:
+                m_imageView.setImageDrawable(null);
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
         }
     }
 
