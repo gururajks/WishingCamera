@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -14,6 +15,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -194,6 +196,13 @@ public class MainScreen extends AppCompatActivity
             Canvas canvas = new Canvas(mutableBitmap);
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            if(imageHeight > imageWidth) {
+                fontSize = Integer.parseInt(sharedPref.getString("portrait_font", "20"));
+            }
+            else {
+                fontSize = Integer.parseInt(sharedPref.getString("landscape_font", "20"));
+            }
             paint.setTextSize(fontSize);
             canvas.drawText(m_wishingMessage, 20, (imageHeight - 20), paint);
             return mutableBitmap;
@@ -355,6 +364,8 @@ public class MainScreen extends AppCompatActivity
         switch (item.getItemId()) {
             case R.id.action_settings:
                 // User chose the "Settings" item, show the app settings UI...
+                Intent preferenceIntent = new Intent(this, SettingsActivity.class);
+                startActivity(preferenceIntent);
                 return true;
 
             case R.id.clear_image:
@@ -367,6 +378,20 @@ public class MainScreen extends AppCompatActivity
                 return super.onOptionsItemSelected(item);
 
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Register the listener whenever a key changes
+    //    getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Unregister the listener whenever a key changes
+   //     getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
     }
 
 }
