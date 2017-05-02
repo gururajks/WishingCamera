@@ -79,6 +79,9 @@ public class MainScreen extends AppCompatActivity
         });
 
         m_imageView = (ImageView) findViewById(R.id.image);
+
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.mipmap.ic_photo_booth_launch);
     }
 
     @Override
