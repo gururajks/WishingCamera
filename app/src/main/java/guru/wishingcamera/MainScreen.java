@@ -79,7 +79,13 @@ public class MainScreen extends AppCompatActivity
         });
 
         m_imageView = (ImageView) findViewById(R.id.image);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
+        updateImageView(editedScaledBitmap);
     }
 
     private void showMessageDialog() {
@@ -92,9 +98,11 @@ public class MainScreen extends AppCompatActivity
         try {
             saveCapturedPhotos();
         } catch (IOException e) {
-
-            e.printStackTrace();
+            Toast.makeText(this, "Cannot write to sd card", Toast.LENGTH_SHORT).show();
+        } catch (NullPointerException e) {
+            Toast.makeText(this, "No image to save", Toast.LENGTH_SHORT).show();
         }
+
     }
 
     //intent for the camera action
@@ -106,6 +114,7 @@ public class MainScreen extends AppCompatActivity
             try {
                 tempPhotoFile = createTempFile();
             } catch (IOException e) {
+                Toast.makeText(this, "Error in writing to sd card", Toast.LENGTH_SHORT).show();
                 Log.e("SD Card", "Error in the SD Card");
             }
             if (tempPhotoFile != null) {
@@ -169,6 +178,7 @@ public class MainScreen extends AppCompatActivity
             m_wishingMessage = message;
             //draw the edited scaled image to image view
             Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
+            //update the new image view
             updateImageView(editedScaledBitmap);
         }
     }
@@ -191,7 +201,7 @@ public class MainScreen extends AppCompatActivity
             int imageHeight = mutableBitmap.getHeight();
             int imageWidth = mutableBitmap.getWidth();
             Log.d("image", "imageHeight:" + imageHeight);
-            int fontSize = (imageHeight / 10);
+            int fontSize;
             //create a canvas and edit the file
             Canvas canvas = new Canvas(mutableBitmap);
             Paint paint = new Paint();
@@ -237,7 +247,7 @@ public class MainScreen extends AppCompatActivity
         m_imageView.invalidate();
     }
 
-    private void saveCapturedPhotos() throws IOException {
+    private void saveCapturedPhotos() throws IOException, NullPointerException {
         boolean canWriteToSdCard = checkStoragePermission();
         Log.d("Permissino", Boolean.toString(canWriteToSdCard));
         if(canWriteToSdCard) {
@@ -251,27 +261,31 @@ public class MainScreen extends AppCompatActivity
         }
     }
 
-    private void writePhoto() throws  IOException {
-        Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
-        Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
-        File imageFile = new File(m_tempFilePath);
+    private void writePhoto() throws  IOException, NullPointerException {
+        if(m_tempFilePath != null) {
+            Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
+            Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
+            File imageFile = new File(m_tempFilePath);
 
-        //Copy file to public folder
-        if(isExternalStorageWritable()) {
-            File albumDir = getAlbumStorageDir("WishPics");
-            File publicImageFile = new File(albumDir, m_tempImageFileName);
-            FileOutputStream fileOutputStream = new FileOutputStream(publicImageFile);
-            if (fileOutputStream != null) {
-                fullSizeEditedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
-                Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT).show();
-                fileOutputStream.close();
+            //Copy file to public folder
+            if (isExternalStorageWritable()) {
+                File albumDir = getAlbumStorageDir("WishPics");
+                File publicImageFile = new File(albumDir, m_tempImageFileName);
+                FileOutputStream fileOutputStream = new FileOutputStream(publicImageFile);
+                if (fileOutputStream != null) {
+                    fullSizeEditedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
+                    Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT).show();
+                    fileOutputStream.close();
 
-                //delete the temp file
-                imageFile.delete();
+                    //delete the temp file
+                    imageFile.delete();
+                }
+            } else {
+                Toast.makeText(getApplicationContext(), "SD Card not loaded", Toast.LENGTH_SHORT).show();
             }
         }
         else {
-            Toast.makeText(getApplicationContext(), "SD Card not loaded", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No image to save", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -372,6 +386,9 @@ public class MainScreen extends AppCompatActivity
                 m_imageView.setImageDrawable(null);
                 return true;
 
+            case R.id.help:
+                sendMail();
+
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
@@ -380,18 +397,12 @@ public class MainScreen extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Register the listener whenever a key changes
-    //    getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        // Unregister the listener whenever a key changes
-   //     getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
+    private void sendMail() {
+        Intent sendMailIntent = new Intent(Intent.ACTION_SEND);
+        sendMailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"gururajks1988@gmail.com"});
+        sendMailIntent.putExtra(Intent.EXTRA_SUBJECT, "Issue: Family Booth");
+        sendMailIntent.setType("text/plain");
+        startActivity(Intent.createChooser(sendMailIntent, "Sending Mail"));
     }
 
 }

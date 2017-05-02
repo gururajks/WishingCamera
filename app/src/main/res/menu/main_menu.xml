@@ -13,7 +13,7 @@
         android:title="Settings"
         android:showAsAction="never"/>
 
-    <item android:id="@+id/action_settings"
+    <item android:id="@+id/help"
         android:title="Help"
         android:showAsAction="never"/>
 </menu>
