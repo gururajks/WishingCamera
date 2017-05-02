@@ -21,7 +21,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -91,6 +90,12 @@ public class MainScreen extends AppCompatActivity
         updateImageView(editedScaledBitmap);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        deleteTempFiles();
+    }
+
     private void showMessageDialog() {
         DialogFragment dialog = new MessageTemplateDialog();
         dialog.show(getFragmentManager(), "MessageTemplateDialog");
@@ -118,7 +123,6 @@ public class MainScreen extends AppCompatActivity
                 tempPhotoFile = createTempFile();
             } catch (IOException e) {
                 Toast.makeText(this, "Error in writing to sd card", Toast.LENGTH_SHORT).show();
-                Log.e("SD Card", "Error in the SD Card");
             }
             if (tempPhotoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
@@ -145,8 +149,6 @@ public class MainScreen extends AppCompatActivity
         );
         m_tempFilePath = image.getAbsolutePath();
         m_tempImageFileName = image.getName();
-        Log.d("Create", "tempfile path:" + m_tempFilePath);
-        Log.d("Create", "filename:" + m_tempImageFileName);
         return image;
     }
 
@@ -203,7 +205,6 @@ public class MainScreen extends AppCompatActivity
             Bitmap mutableBitmap = uneditedImage.copy(Bitmap.Config.ARGB_8888, true);
             int imageHeight = mutableBitmap.getHeight();
             int imageWidth = mutableBitmap.getWidth();
-            Log.d("image", "imageHeight:" + imageHeight);
             int fontSize;
             //create a canvas and edit the file
             Canvas canvas = new Canvas(mutableBitmap);
@@ -252,7 +253,6 @@ public class MainScreen extends AppCompatActivity
 
     private void saveCapturedPhotos() throws IOException, NullPointerException {
         boolean canWriteToSdCard = checkStoragePermission();
-        Log.d("Permissino", Boolean.toString(canWriteToSdCard));
         if(canWriteToSdCard) {
             writePhoto();
         }
@@ -268,7 +268,6 @@ public class MainScreen extends AppCompatActivity
         if(m_tempFilePath != null) {
             Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
             Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
-            File imageFile = new File(m_tempFilePath);
 
             //Copy file to public folder
             if (isExternalStorageWritable()) {
@@ -280,8 +279,6 @@ public class MainScreen extends AppCompatActivity
                     Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT).show();
                     fileOutputStream.close();
 
-                    //delete the temp file
-                    imageFile.delete();
                 }
             } else {
                 Toast.makeText(getApplicationContext(), "SD Card not loaded", Toast.LENGTH_SHORT).show();
@@ -289,6 +286,15 @@ public class MainScreen extends AppCompatActivity
         }
         else {
             Toast.makeText(this, "No image to save", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void deleteTempFiles() {
+        File imageFile = new File(m_tempFilePath);
+
+        if(imageFile != null ) {
+            //delete the temp file
+            imageFile.delete();
         }
     }
 
@@ -308,13 +314,11 @@ public class MainScreen extends AppCompatActivity
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d("Permission", "Permission Granted");
                     saveEditedPhoto();
                 } else {
 
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
-                    Log.d("Permission", "Permission to write SD Card denied");
                     Toast.makeText(this, "App requires SD card permission", Toast.LENGTH_SHORT).show();
                 }
                 break;
@@ -326,9 +330,7 @@ public class MainScreen extends AppCompatActivity
         // Get the directory for the user's public pictures directory.
         File file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
         File imagesFolder = new File(file, albumName);
-        if (!imagesFolder.mkdirs()) {
-            Log.d("Create", imagesFolder + ":Directory not created");
-        }
+        imagesFolder.mkdirs();
         return imagesFolder;
     }
 
@@ -347,8 +349,6 @@ public class MainScreen extends AppCompatActivity
         // Get the dimensions of the View
         int targetW = m_imageView.getWidth();
         int targetH = m_imageView.getHeight();
-        Log.d("image", "targetH:"+targetH);
-        Log.d("image", "targetW:"+targetW);
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
@@ -387,6 +387,7 @@ public class MainScreen extends AppCompatActivity
 
             case R.id.clear_image:
                 m_imageView.setImageDrawable(null);
+                deleteTempFiles();
                 return true;
 
             case R.id.help:
@@ -402,7 +403,7 @@ public class MainScreen extends AppCompatActivity
 
     private void sendMail() {
         Intent sendMailIntent = new Intent(Intent.ACTION_SEND);
-        sendMailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"gururajks1988@gmail.com"});
+        sendMailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] {"mbtaloc@gmail.com"});
         sendMailIntent.putExtra(Intent.EXTRA_SUBJECT, "Issue: Family Booth");
         sendMailIntent.setType("text/plain");
         startActivity(Intent.createChooser(sendMailIntent, "Sending Mail"));

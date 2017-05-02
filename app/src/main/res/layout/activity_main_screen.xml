@@ -48,7 +48,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/camera_icon"
                 android:layout_centerHorizontal="true"
-                android:text="Take a pic"/>
+                android:text="@string/takeapic"/>
         </RelativeLayout>
 
         <View
@@ -73,7 +73,7 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/message_icon"
                 android:layout_centerHorizontal="true"
-                android:text="Message"/>
+                android:text="@string/message"/>
         </RelativeLayout>
     </LinearLayout>
 
@@ -99,7 +99,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/save_icon"
             android:layout_centerHorizontal="true"
-            android:text="Save"/>
+            android:text="@string/save"/>
     </RelativeLayout>
 
 
