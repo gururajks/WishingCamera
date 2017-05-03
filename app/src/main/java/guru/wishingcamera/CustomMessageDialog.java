@@ -3,11 +3,11 @@ package guru.wishingcamera;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.view.LayoutInflater;
 import android.widget.EditText;
 
@@ -16,7 +16,7 @@ import android.widget.EditText;
  * A simple {@link Fragment} subclass.
  * This is a dialog for the custom message
  */
-public class CustomMessageDialog extends DialogFragment {
+public class CustomMessageDialog extends AppCompatDialogFragment {
 
     private CustomMessageDialogListener customMessageListener=null;
 

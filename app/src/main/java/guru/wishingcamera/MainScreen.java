@@ -1,7 +1,6 @@
 package guru.wishingcamera;
 
 import android.Manifest;
-import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,6 +20,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -49,6 +49,8 @@ public class MainScreen extends AppCompatActivity
     String m_wishingMessage = "";
 
     private String m_tempImageFileName;
+    private int m_scaleFactor;
+    private File m_publicImageFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +88,7 @@ public class MainScreen extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
+        Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap, 1);
         updateImageView(editedScaledBitmap);
     }
 
@@ -97,8 +99,8 @@ public class MainScreen extends AppCompatActivity
     }
 
     private void showMessageDialog() {
-        DialogFragment dialog = new MessageTemplateDialog();
-        dialog.show(getFragmentManager(), "MessageTemplateDialog");
+        AppCompatDialogFragment dialog = new MessageTemplateDialog();
+        dialog.show(getSupportFragmentManager(), "MessageTemplateDialog");
     }
 
     //save the edited photo
@@ -130,7 +132,6 @@ public class MainScreen extends AppCompatActivity
                         tempPhotoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-                galleryAddPic();
             }
 
         }
@@ -166,8 +167,7 @@ public class MainScreen extends AppCompatActivity
 
     private void galleryAddPic() {
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File f = new File(m_tempFilePath);
-        Uri contentUri = Uri.fromFile(f);
+        Uri contentUri = Uri.fromFile(m_publicImageFile);
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
     }
@@ -177,12 +177,12 @@ public class MainScreen extends AppCompatActivity
     public void onMessageTemplateClick(DialogInterface dialogFragment, String message, int which) {
         if (which == 3) {
             //draw a new dialog fragment with edit text and take a custom message
-            DialogFragment dialog = new CustomMessageDialog();
-            dialog.show(getFragmentManager(), "CustomMessageDialog");
+            AppCompatDialogFragment dialog = new CustomMessageDialog();
+            dialog.show(getSupportFragmentManager(), "CustomMessageDialog");
         } else {
             m_wishingMessage = message;
             //draw the edited scaled image to image view
-            Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
+            Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap, 1);
             //update the new image view
             updateImageView(editedScaledBitmap);
         }
@@ -196,29 +196,29 @@ public class MainScreen extends AppCompatActivity
     public void onCustomMessageDialogOk(DialogInterface dialog, String message) {
         m_wishingMessage = message;
         //draw the edited scaled image to image view
-        Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap);
+        Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap, 1);
         updateImageView(editedScaledBitmap);
     }
 
-    protected Bitmap getEditedCapturedImage(Bitmap uneditedImage) {
+    protected Bitmap getEditedCapturedImage(Bitmap uneditedImage, int scale_factor) {
         if (uneditedImage != null) {
             Bitmap mutableBitmap = uneditedImage.copy(Bitmap.Config.ARGB_8888, true);
             int imageHeight = mutableBitmap.getHeight();
             int imageWidth = mutableBitmap.getWidth();
             int fontSize;
             //create a canvas and edit the file
-            Canvas canvas = new Canvas(mutableBitmap);
+            Canvas bcanvas = new Canvas(mutableBitmap);
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
             if(imageHeight > imageWidth) {
-                fontSize = Integer.parseInt(sharedPref.getString("portrait_font", "20"));
+                fontSize = Integer.parseInt(sharedPref.getString("portrait_font", "20")) * scale_factor;
             }
             else {
-                fontSize = Integer.parseInt(sharedPref.getString("landscape_font", "20"));
+                fontSize = Integer.parseInt(sharedPref.getString("landscape_font", "20")) * scale_factor;
             }
             paint.setTextSize(fontSize);
-            canvas.drawText(m_wishingMessage, 20, (imageHeight - 20), paint);
+            bcanvas.drawText(m_wishingMessage, 20, (imageHeight - fontSize / 2), paint);
             return mutableBitmap;
         }
         return null;
@@ -254,7 +254,10 @@ public class MainScreen extends AppCompatActivity
     private void saveCapturedPhotos() throws IOException, NullPointerException {
         boolean canWriteToSdCard = checkStoragePermission();
         if(canWriteToSdCard) {
+            //this should be done in a different thread
             writePhoto();
+            //this should be done on onPostExecute in a different thread
+            galleryAddPic();
         }
         else {
             //request permission to write to external disk
@@ -267,13 +270,13 @@ public class MainScreen extends AppCompatActivity
     private void writePhoto() throws  IOException, NullPointerException {
         if(m_tempFilePath != null) {
             Bitmap fullSizeCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath);
-            Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap);
+            Bitmap fullSizeEditedBitmap = getEditedCapturedImage(fullSizeCapturedBitmap, m_scaleFactor);
 
             //Copy file to public folder
             if (isExternalStorageWritable()) {
                 File albumDir = getAlbumStorageDir("WishPics");
-                File publicImageFile = new File(albumDir, m_tempImageFileName);
-                FileOutputStream fileOutputStream = new FileOutputStream(publicImageFile);
+                m_publicImageFile = new File(albumDir, m_tempImageFileName);
+                FileOutputStream fileOutputStream = new FileOutputStream(m_publicImageFile);
                 if (fileOutputStream != null) {
                     fullSizeEditedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fileOutputStream);
                     Toast.makeText(getApplicationContext(), "File saved", Toast.LENGTH_SHORT).show();
@@ -290,11 +293,13 @@ public class MainScreen extends AppCompatActivity
     }
 
     private void deleteTempFiles() {
-        File imageFile = new File(m_tempFilePath);
+        if(m_tempFilePath != null) {
+            File imageFile = new File(m_tempFilePath);
 
-        if(imageFile != null ) {
-            //delete the temp file
-            imageFile.delete();
+            if (imageFile != null) {
+                //delete the temp file
+                imageFile.delete();
+            }
         }
     }
 
@@ -357,11 +362,11 @@ public class MainScreen extends AppCompatActivity
         int photoH = bmOptions.outHeight;
 
         // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+        m_scaleFactor = Math.min(photoW / targetW, photoH / targetH);
 
         // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inSampleSize = m_scaleFactor;
         m_scaledCapturedBitmap = BitmapFactory.decodeFile(m_tempFilePath, bmOptions);
         if (m_scaledCapturedBitmap == null) {
             BitmapDrawable bmDrawable = (BitmapDrawable) m_imageView.getDrawable();

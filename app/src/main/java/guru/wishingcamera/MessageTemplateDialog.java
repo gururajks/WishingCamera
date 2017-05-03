@@ -1,20 +1,18 @@
 package guru.wishingcamera;
 
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
+import android.support.v7.app.AppCompatDialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.widget.Toast;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class MessageTemplateDialog extends DialogFragment {
+public class MessageTemplateDialog extends AppCompatDialogFragment {
 
     public interface MessageTemplateListener {
         public void onMessageTemplateClick(DialogInterface dialogFragment, String whichMessage, int which);
@@ -34,7 +32,6 @@ public class MessageTemplateDialog extends DialogFragment {
                         public void onClick(DialogInterface dialog, int which) {
                             String message = getResources().getStringArray(R.array.message_array)[which];
                             messageTemplateListener.onMessageTemplateClick(dialog, message, which);
-
                         }
                     });
 

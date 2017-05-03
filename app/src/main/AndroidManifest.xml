@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="guru.wishingcamera">
 
-    <uses-feature
-        android:name="android.hardware.camera2"
-        android:required="true" />
+    <uses-permission android:name="android.hardware.camera2" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-sdk android:minSdkVersion="19"
+        android:targetSdkVersion="25" />
 
     <application
         android:allowBackup="true"
