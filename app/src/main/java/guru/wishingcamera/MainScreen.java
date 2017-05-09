@@ -27,6 +27,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import java.io.File;
@@ -37,7 +38,8 @@ import java.util.Date;
 
 public class MainScreen extends AppCompatActivity
         implements MessageTemplateDialog.MessageTemplateListener,
-        CustomMessageDialog.CustomMessageDialogListener {
+        CustomMessageDialog.CustomMessageDialogListener,
+        SeekBar.OnSeekBarChangeListener {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_WRITE_EXTERNAL_STORAGE = 2;
@@ -47,6 +49,7 @@ public class MainScreen extends AppCompatActivity
     Bitmap m_scaledCapturedBitmap;
     ImageView m_imageView;
     String m_wishingMessage = "";
+    int m_fontSize = 20;
 
     private String m_tempImageFileName;
     private int m_scaleFactor;
@@ -83,11 +86,20 @@ public class MainScreen extends AppCompatActivity
 
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setIcon(R.mipmap.ic_photo_booth_launch);
+
+        SeekBar slider = (SeekBar) findViewById(R.id.fontSizeSlider);
+
+        slider.setOnSeekBarChangeListener(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        SeekBar slider = (SeekBar) findViewById(R.id.fontSizeSlider);
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        int maxfontSize = Integer.parseInt(sharedPref.getString("max_font", "100"));
+        slider.setMax(maxfontSize);
         Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap, 1);
         updateImageView(editedScaledBitmap);
     }
@@ -196,6 +208,10 @@ public class MainScreen extends AppCompatActivity
     public void onCustomMessageDialogOk(DialogInterface dialog, String message) {
         m_wishingMessage = message;
         //draw the edited scaled image to image view
+        updateTextInImage();
+    }
+
+    public void updateTextInImage() {
         Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap, 1);
         updateImageView(editedScaledBitmap);
     }
@@ -210,15 +226,10 @@ public class MainScreen extends AppCompatActivity
             Canvas bcanvas = new Canvas(mutableBitmap);
             Paint paint = new Paint();
             paint.setColor(Color.WHITE);
-            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-            if(imageHeight > imageWidth) {
-                fontSize = Integer.parseInt(sharedPref.getString("portrait_font", "20")) * scale_factor;
-            }
-            else {
-                fontSize = Integer.parseInt(sharedPref.getString("landscape_font", "20")) * scale_factor;
-            }
-            paint.setTextSize(fontSize);
-            bcanvas.drawText(m_wishingMessage, 20, (imageHeight - fontSize / 2), paint);
+
+            m_fontSize *= scale_factor;
+            paint.setTextSize(m_fontSize);
+            bcanvas.drawText(m_wishingMessage, 20, (imageHeight - m_fontSize / 2), paint);
             return mutableBitmap;
         }
         return null;
@@ -414,4 +425,19 @@ public class MainScreen extends AppCompatActivity
         startActivity(Intent.createChooser(sendMailIntent, "Sending Mail"));
     }
 
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        m_fontSize = progress;
+        updateTextInImage();
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
 }

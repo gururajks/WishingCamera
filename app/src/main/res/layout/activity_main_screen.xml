@@ -13,12 +13,28 @@
         android:layout_height="0dp"
         android:layout_weight="4"
         android:layout_margin="5dp">
-
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/image" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:background="@drawable/ic_photo_black_48dp"
+            android:id="@+id/image_foreground" />
+
     </FrameLayout>
+
+    <SeekBar
+        android:id="@+id/fontSizeSlider"
+        android:padding="10dp"
+        android:progressTint="@color/colorPrimaryDark"
+        android:thumbTint="@color/colorBlue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
     <View
         android:layout_width="match_parent"

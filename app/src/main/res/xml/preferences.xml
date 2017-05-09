@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="Font Size">
+    <PreferenceCategory android:title="Text">
 
         <EditTextPreference
-            android:defaultValue="20"
+            android:defaultValue="100"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="Portrait"
-            android:key="portrait_font" />
-        <EditTextPreference
-            android:defaultValue="20"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="Landscape"
-            android:key="landscape_font" />
+            android:title="Maximum Font Size"
+            android:key="max_font" />
     </PreferenceCategory>
 </PreferenceScreen>
