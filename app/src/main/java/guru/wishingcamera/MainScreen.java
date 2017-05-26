@@ -54,6 +54,7 @@ public class MainScreen extends AppCompatActivity
     private String m_tempImageFileName;
     private int m_scaleFactor;
     private File m_publicImageFile;
+    boolean m_updateImageOnResume = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,13 +96,15 @@ public class MainScreen extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        SeekBar slider = (SeekBar) findViewById(R.id.fontSizeSlider);
-
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        int maxfontSize = Integer.parseInt(sharedPref.getString("max_font", "100"));
-        slider.setMax(maxfontSize);
-        Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap, 1);
-        updateImageView(editedScaledBitmap);
+        if(m_updateImageOnResume == true) {
+            SeekBar slider = (SeekBar) findViewById(R.id.fontSizeSlider);
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            int maxFontSize = Integer.parseInt(sharedPref.getString("max_font", "100"));
+            slider.setMax(maxFontSize);
+            Bitmap editedScaledBitmap = getEditedCapturedImage(m_scaledCapturedBitmap, 1);
+            updateImageView(editedScaledBitmap);
+        }
+        m_updateImageOnResume = true;
     }
 
     @Override
@@ -160,6 +163,7 @@ public class MainScreen extends AppCompatActivity
                 ".jpg",         /* suffix */
                 storageDir      /* directory */
         );
+        deleteTempFiles();
         m_tempFilePath = image.getAbsolutePath();
         m_tempImageFileName = image.getName();
         return image;
@@ -175,6 +179,11 @@ public class MainScreen extends AppCompatActivity
             //set the image view with the edited file
             m_imageView.setImageBitmap(m_scaledCapturedBitmap);
         }
+        if(resultCode == RESULT_CANCELED) {
+            m_imageView.setImageDrawable(null);
+            deleteTempFiles();
+            m_updateImageOnResume = false;
+        }
     }
 
     private void galleryAddPic() {
@@ -183,7 +192,6 @@ public class MainScreen extends AppCompatActivity
         mediaScanIntent.setData(contentUri);
         this.sendBroadcast(mediaScanIntent);
     }
-
 
     @Override
     public void onMessageTemplateClick(DialogInterface dialogFragment, String message, int which) {
@@ -200,11 +208,10 @@ public class MainScreen extends AppCompatActivity
         }
     }
 
-
-    @Override
     /*
     * send message when the custom message has been sent back to activity upon ok
      */
+    @Override
     public void onCustomMessageDialogOk(DialogInterface dialog, String message) {
         m_wishingMessage = message;
         //draw the edited scaled image to image view
